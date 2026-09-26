@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discord Tracker Report — September 19 – September 25</title>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-color: #0f1117;
+            --card-bg: #1a1d2e;
+            --card-border: #2a2e45;
+            --accent-cyan: #00d4ff;
+            --accent-yellow: #ffd700;
+            --accent-green: #00ff88;
+            --text-main: #e2e8f0;
+            --text-muted: #94a3b8;
+            --badge-crypto: #00d4ff;
+            --badge-sfx: #00ff88;
+            --badge-indicator: #ffd700;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        /* Header Nav */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--card-bg);
+            padding: 16px 24px;
+            border-radius: 12px;
+            border: 1px solid var(--card-border);
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .header-title h1 {
+            font-size: 1.25rem;
+            color: #fff;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header-title span {
+            color: var(--accent-cyan);
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 8px;
+            background: #0f1117;
+            padding: 4px;
+            border-radius: 8px;
+        }
+
+        .nav-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        .nav-btn.active {
+            background: var(--accent-cyan);
+            color: #0f1117;
+        }
+
+        .date-badge {
+            background: rgba(0, 212, 255, 0.1);
+            color: var(--accent-cyan);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        /* Views */
+        .page-view {
+            display: none;
+        }
+
+        .page-view.active {
+            display: block;
+        }
+
+        /* Stat Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            padding: 18px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+        }
+
+        .stat-card.cyan::before { background: var(--accent-cyan); }
+        .stat-card.yellow::before { background: var(--accent-yellow); }
+        .stat-card.green::before { background: var(--accent-green); }
+        .stat-card.purple::before { background: #a855f7; }
+
+        .stat-label {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        /* Control Bars */
+        .controls-bar {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            padding: 14px 20px;
+            margin-bottom: 24px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        select, input[type="text"] {
+            background: #0f1117;
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            outline: none;
+        }
+
+        select:focus, input[type="text"]:focus {
+            border-color: var(--accent-cyan);
+        }
+
+        /* Charts Grid */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .chart-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .chart-card h3 {
+            font-size: 1rem;
+            color: #fff;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 240px;
+            width: 100%;
+        }
+
+        /* Tables */
+        .table-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            padding: 20px;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.875rem;
+        }
+
+        th {
+            background: rgba(15, 17, 23, 0.6);
+            color: var(--text-muted);
+            padding: 12px 14px;
+            font-weight: 600;
+            border-bottom: 1px solid var(--card-border);
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 12px 14px;
+            border-bottom: 1px solid rgba(42, 46, 69, 0.5);
+            color: var(--text-main);
+            vertical-align: top;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        /* Badges */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-crypto {
+            background: rgba(0, 212, 255, 0.15);
+            color: var(--badge-crypto);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+        }
+
+        .badge-sfx {
+            background: rgba(0, 255, 136, 0.15);
+            color: var(--badge-sfx);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+        }
+
+        .badge-indicator {
+            background: rgba(255, 215, 0, 0.15);
+            color: var(--badge-indicator);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+
+        .badge-other {
+            background: rgba(148, 163, 184, 0.15);
+            color: var(--text-muted);
+            border: 1px solid rgba(148, 163, 184, 0.3);
+        }
+
+        /* Sub-tabs for Page 2 */
+        .sub-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--card-border);
+            padding-bottom: 10px;
+            overflow-x: auto;
+        }
+
+        .sub-tab-btn {
+            background: transparent;
+            border: 1px solid var(--card-border);
+            color: var(--text-muted);
+            padding: 6px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            white-space: nowrap;
+            user-select: none;
+        }
+
+        .sub-tab-btn.active {
+            background: var(--accent-cyan);
+            color: #0f1117;
+            border-color: var(--accent-cyan);
+            font-weight: 600;
+        }
+
+        /* Expandable text */
+        .expandable {
+            cursor: pointer;
+            position: relative;
+        }
+
+        .expandable-content {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            transition: all 0.2s;
+        }
+
+        .expandable.expanded .expandable-content {
+            display: block;
+            overflow: visible;
+        }
+
+        .expand-hint {
+            font-size: 0.7rem;
+            color: var(--accent-cyan);
+            margin-top: 4px;
+            display: inline-block;
+        }
+
+        a.thread-link {
+            color: var(--accent-cyan);
+            text-decoration: none;
+        }
+        a.thread-link:hover {
+            text-decoration: underline;
+        }
+
+        /* Insights Styling */
+        .insights-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+        }
+
+        .insight-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            padding: 22px;
+            line-height: 1.6;
+        }
+
+        .insight-card h3 {
+            color: var(--accent-cyan);
+            font-size: 1.05rem;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .insight-card ul {
+            padding-left: 20px;
+            margin-top: 8px;
+        }
+
+        .insight-card li {
+            margin-bottom: 8px;
+            color: var(--text-main);
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-title">
+            <h1><span>❖</span> Discord Tracker Report</h1>
+        </div>
+        <div class="nav-tabs">
+            <button class="nav-btn active" data-target="page1">Top Drivers Overview</button>
+            <button class="nav-btn" data-target="page2">Summary Counts</button>
+            <button class="nav-btn" data-target="page3">Concern & Issues</button>
+            <button class="nav-btn" data-target="page4">Insights</button>
+        </div>
+        <div class="date-badge">
+            September 19 – September 25, 2026
+        </div>
+    </header>
+
+    <!-- PAGE 1: Top Drivers Overview -->
+    <div id="page1" class="page-view active">
+        <div class="stats-grid">
+            <div class="stat-card cyan">
+                <div class="stat-label">Total Entries</div>
+                <div class="stat-value" id="card-total">3</div>
+            </div>
+            <div class="stat-card yellow">
+                <div class="stat-label">Account / Subscription</div>
+                <div class="stat-value" id="card-acc">0</div>
+            </div>
+            <div class="stat-card green">
+                <div class="stat-label">HOW TO Count</div>
+                <div class="stat-value" id="card-howto">1</div>
+            </div>
+            <div class="stat-card purple">
+                <div class="stat-label">Technical Count</div>
+                <div class="stat-value" id="card-tech">2</div>
+            </div>
+        </div>
+
+        <div class="controls-bar">
+            <div class="filter-group">
+                <label for="topN-select">Top N Issues:</label>
+                <select id="topN-select">
+                    <option value="5">Top 5</option>
+                    <option value="10">Top 10</option>
+                    <option value="15">Top 15</option>
+                    <option value="all" selected>All</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="cat-select">Category Table Filter:</label>
+                <select id="cat-select">
+                    <option value="all" selected>All Categories</option>
+                    <option value="Account / Subscription">Account / Subscription</option>
+                    <option value="HOW TO">HOW TO</option>
+                    <option value="Technical">Technical</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="chartType-select">Chart Type:</label>
+                <select id="chartType-select">
+                    <option value="bar" selected>Bar Chart</option>
+                    <option value="doughnut">Doughnut Chart</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="charts-grid">
+            <div class="chart-card">
+                <h3>Account / Subscription Issues</h3>
+                <div class="chart-container"><canvas id="chartAcc"></canvas></div>
+            </div>
+            <div class="chart-card">
+                <h3>HOW TO Issues</h3>
+                <div class="chart-container"><canvas id="chartHowTo"></canvas></div>
+            </div>
+            <div class="chart-card">
+                <h3>Technical Issues</h3>
+                <div class="chart-container"><canvas id="chartTech"></canvas></div>
+            </div>
+        </div>
+
+        <div class="table-card">
+            <h3 style="color:#fff; margin-bottom:12px;">Driver Details Table</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Category</th>
+                        <th>Driver / Issue</th>
+                        <th>Count</th>
+                        <th>Share of Category</th>
+                    </tr>
+                </thead>
+                <tbody id="driver-table-body"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- PAGE 2: Summary Counts -->
+    <div id="page2" class="page-view">
+        <div class="sub-tabs">
+            <button class="sub-tab-btn active" data-field="channel">B (Discord Channel)</button>
+            <button class="sub-tab-btn" data-field="main_concern">G (Main Concern)</button>
+            <button class="sub-tab-btn" data-field="account_sub">H (Account/Subscription)</button>
+            <button class="sub-tab-btn" data-field="how_to">I (HOW TO)</button>
+            <button class="sub-tab-btn" data-field="technical">J (Technical)</button>
+        </div>
+
+        <div class="controls-bar">
+            <div class="filter-group" style="width: 100%;">
+                <input type="text" id="summary-search" placeholder="Search summary items..." style="width: 100%; max-width: 350px;">
+            </div>
+        </div>
+
+        <div class="charts-grid" style="grid-template-columns: 1fr;">
+            <div class="chart-card">
+                <h3 id="summary-chart-title">Frequency Breakdown</h3>
+                <div class="chart-container" style="height: 300px;"><canvas id="chartSummary"></canvas></div>
+            </div>
+        </div>
+
+        <div class="table-card">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Value</th>
+                        <th>Count</th>
+                        <th>Percentage</th>
+                    </tr>
+                </thead>
+                <tbody id="summary-table-body"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- PAGE 3: Concern, HOW TO & Technical Issues -->
+    <div id="page3" class="page-view">
+        <div class="controls-bar">
+            <div class="filter-group">
+                <select id="p3-group">
+                    <option value="all">All Groups</option>
+                    <option value="CRYPTO">🔵 CRYPTO</option>
+                    <option value="SFX">🟢 SFX</option>
+                    <option value="Indicator Providers">🟡 Indicator Providers</option>
+                </select>
+                <select id="p3-channel">
+                    <option value="all">All Channels</option>
+                </select>
+                <select id="p3-concern">
+                    <option value="all">All Main Concerns</option>
+                </select>
+                <select id="p3-howto">
+                    <option value="all">All HOW TO</option>
+                </select>
+                <select id="p3-tech">
+                    <option value="all">All Technical</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <input type="text" id="p3-search" placeholder="Search questions & recommendations..." style="width: 220px;">
+                <span id="p3-count-badge" class="date-badge">Showing 0 entries</span>
+            </div>
+        </div>
+
+        <div class="table-card">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Discord Channel</th>
+                        <th>Main Concern</th>
+                        <th>Account/Sub</th>
+                        <th>HOW TO</th>
+                        <th>Technical</th>
+                        <th>Question</th>
+                        <th>Recommendation</th>
+                    </tr>
+                </thead>
+                <tbody id="p3-table-body"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- PAGE 4: Insights -->
+    <div id="page4" class="page-view">
+        <div class="insights-grid">
+            <div class="insight-card">
+                <h3>💬 Total Chats & Volume</h3>
+                <p>Total chats for this week: <strong>3 chats</strong>.</p>
+                <p style="color: var(--text-muted); margin-top: 6px;"><strong>Challenges:</strong> Very low chat volume recorded during this period.</p>
+            </div>
+            <div class="insight-card">
+                <h3>🛠️ Escalations Status</h3>
+                <p><strong>Escalated cases:</strong> No cases were escalated to the tech team this week.</p>
+            </div>
+            <div class="insight-card" style="grid-column: 1 / -1;">
+                <h3>📋 Documentation & Response Time</h3>
+                <p>All cases were <strong>documented properly</strong> in the tracker, and all chats were answered within a <strong>reasonable time frame</strong>.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Target date range: September 19 to September 25, 2026
+        const rawData = [
+          {
+            "thread_link": "https://discord.com/channels/1084814874393194527/1355218704962551898/1550543040165191731",
+            "channel": "SFX chat-es",
+            "agent": "Vadym",
+            "date": "2026-09-19",
+            "main_concern": "Strategy",
+            "account_sub": null,
+            "how_to": null,
+            "technical": "Trade not executed",
+            "question": "Trade not executed",
+            "recommendation": "Asked for user ID to perform the investigation"
+          },
+          {
+            "thread_link": "https://discord.com/channels/1084814874393194527/1357697325249728673/1552524209916346458",
+            "channel": "Crypto chat-de",
+            "agent": "Pablo P",
+            "date": "2026-09-23",
+            "main_concern": "AI Basket",
+            "account_sub": null,
+            "how_to": "How to create AI basket",
+            "technical": null,
+            "question": "Customer is asking why when switching to real account nothing is being shown in the main AI BASKET page.",
+            "recommendation": "I clarified to customer that there is no issue at all, the reason is because she did not create any AI BASKET yet so there is nothing to show and she can click on explore to discover the strategies available"
+          },
+          {
+            "thread_link": "https://discord.com/channels/1084814874393194527/1177655091071811634/1552564433816002611",
+            "channel": "SFX chat-en",
+            "agent": "Pablo P",
+            "date": "2026-09-23",
+            "main_concern": "Strategy",
+            "account_sub": null,
+            "how_to": null,
+            "technical": "Invalid price → Requested price is outdated or off-tick",
+            "question": "Customer set up a slippage of 10 pips and is asking why some operations are not being executed",
+            "recommendation": "By checking the provided details, the price difference was about 20 pips which execeded the configured slippage, this was explained to customer and affirming that the feautre is working as expected and not an error."
+          }
+        ];
+
+        // Channel groups helper
+        const cryptoChannels = ['crypto chat-en', 'crypto chat-de', 'crypto chat-es', 'crypto chat-it', 'xaudominos-fx', 'fx support chat: english', 'sam-crypto'];
+        const sfxChannels = ['sfx chat-en', 'sfx chat-de', 'sfx chat-es', 'sfx chat-it', 'wes-league', 'luxor-fx', 'reynova-fx', 'phantompips-fx', 'bennyquant-fx', 'hypernexus-fx', 'sfx chat de soporte: español', 'melodytrade-fx', 'galaxion-fx', 'prisma-fx', 'goldstrike-fx', 'londontrigger-fx'];
+        const indicatorChannels = ['melodytrade-fx', 'reynova-fx'];
+
+        function getChannelGroup(ch) {
+            if (!ch) return 'Other';
+            const c = ch.toLowerCase().trim();
+            if (indicatorChannels.includes(c)) return 'Indicator Providers';
+            if (cryptoChannels.includes(c) || c.includes('crypto')) return 'CRYPTO';
+            if (sfxChannels.includes(c) || c.includes('sfx') || c.includes('-fx') || c.includes('league')) return 'SFX';
+            return 'Other';
+        }
+
+        function getGroupBadgeHtml(group) {
+            if (group === 'CRYPTO') return `<span class="badge badge-crypto">🔵 CRYPTO</span>`;
+            if (group === 'SFX') return `<span class="badge badge-sfx">🟢 SFX</span>`;
+            if (group === 'Indicator Providers') return `<span class="badge badge-indicator">🟡 Indicator</span>`;
+            return `<span class="badge badge-other">⚪ ${group}</span>`;
+        }
+
+        // Global Chart Instances
+        let chartAccInstance = null;
+        let chartHowToInstance = null;
+        let chartTechInstance = null;
+        let chartSummaryInstance = null;
+
+        // Active state
+        let currentSummaryField = 'channel';
+
+        // Page Navigation
+        function switchPage(pageId) {
+            document.querySelectorAll('.page-view').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+            
+            const targetPage = document.getElementById(pageId);
+            if (targetPage) targetPage.classList.add('active');
+            
+            const btn = document.querySelector(`.nav-btn[data-target="${pageId}"]`);
+            if (btn) btn.classList.add('active');
+
+            if (pageId === 'page1') updatePage1();
+            if (pageId === 'page2') renderPage2();
+            if (pageId === 'page3') renderPage3();
+        }
+
+        function getCounts(key) {
+            const counts = {};
+            rawData.forEach(r => {
+                const val = r[key];
+                if (val) counts[val] = (counts[val] || 0) + 1;
+            });
+            return counts;
+        }
+
+        function updatePage1() {
+            const topNVal = document.getElementById('topN-select').value;
+            const catFilter = document.getElementById('cat-select').value;
+            const chartType = document.getElementById('chartType-select').value;
+
+            const accCounts = getCounts('account_sub');
+            const howToCounts = getCounts('how_to');
+            const techCounts = getCounts('technical');
+
+            const renderCategoryChart = (canvasId, countsObj, label, color, instanceRef) => {
+                const canvas = document.getElementById(canvasId);
+                if (!canvas) return null;
+                const ctx = canvas.getContext('2d');
+                if (instanceRef) instanceRef.destroy();
+
+                let sorted = Object.entries(countsObj).sort((a,b) => b[1] - a[1]);
+                if (topNVal !== 'all') sorted = sorted.slice(0, parseInt(topNVal));
+
+                let labels = sorted.map(x => x[0]);
+                let data = sorted.map(x => x[1]);
+
+                if (labels.length === 0) {
+                    labels = ['No Issues Logged'];
+                    data = [0];
+                }
+
+                return new Chart(ctx, {
+                    type: chartType,
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: label,
+                            data: data,
+                            backgroundColor: chartType === 'doughnut' 
+                                ? ['#00d4ff', '#00ff88', '#ffd700', '#a855f7', '#ff4757']
+                                : color,
+                            borderColor: '#1a1d2e',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: chartType === 'doughnut', labels: { color: '#94a3b8' } }
+                        },
+                        scales: chartType === 'bar' ? {
+                            x: { ticks: { color: '#94a3b8' }, grid: { color: '#2a2e45' } },
+                            y: { ticks: { color: '#94a3b8', precision: 0 }, grid: { color: '#2a2e45' }, min: 0 }
+                        } : {}
+                    }
+                });
+            };
+
+            chartAccInstance = renderCategoryChart('chartAcc', accCounts, 'Account / Sub', '#ffd700', chartAccInstance);
+            chartHowToInstance = renderCategoryChart('chartHowTo', howToCounts, 'HOW TO', '#00ff88', chartHowToInstance);
+            chartTechInstance = renderCategoryChart('chartTech', techCounts, 'Technical', '#00d4ff', chartTechInstance);
+
+            const tbody = document.getElementById('driver-table-body');
+            tbody.innerHTML = '';
+
+            let tableData = [];
+            
+            const addCatData = (catName, countsObj) => {
+                const totalInCat = Object.values(countsObj).reduce((a,b) => a+b, 0);
+                Object.entries(countsObj).forEach(([issue, count]) => {
+                    const share = totalInCat > 0 ? ((count / totalInCat) * 100).toFixed(1) + '%' : '0%';
+                    tableData.push({ category: catName, issue, count, share, rawCount: count });
+                });
+            };
+
+            if (catFilter === 'all' || catFilter === 'Account / Subscription') addCatData('Account / Subscription', accCounts);
+            if (catFilter === 'all' || catFilter === 'HOW TO') addCatData('HOW TO', howToCounts);
+            if (catFilter === 'all' || catFilter === 'Technical') addCatData('Technical', techCounts);
+
+            tableData.sort((a,b) => b.rawCount - a.rawCount);
+            if (topNVal !== 'all') tableData = tableData.slice(0, parseInt(topNVal));
+
+            if (tableData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">No records found</td></tr>`;
+            } else {
+                tableData.forEach((row, idx) => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${idx + 1}</td>
+                            <td><span class="badge badge-crypto">${row.category}</span></td>
+                            <td>${row.issue}</td>
+                            <td><strong>${row.count}</strong></td>
+                            <td>${row.share}</td>
+                        </tr>
+                    `;
+                });
+            }
+        }
+
+        function renderPage2() {
+            const searchVal = document.getElementById('summary-search').value.toLowerCase();
+            const counts = getCounts(currentSummaryField);
+            
+            let items = Object.entries(counts).map(([val, count]) => ({ val, count }));
+            items.sort((a,b) => b.count - a.count);
+
+            if (searchVal) {
+                items = items.filter(item => item.val.toLowerCase().includes(searchVal));
+            }
+
+            const totalSum = items.reduce((a,b) => a + b.count, 0);
+
+            const canvas = document.getElementById('chartSummary');
+            if (canvas) {
+                const ctx = canvas.getContext('2d');
+                if (chartSummaryInstance) chartSummaryInstance.destroy();
+
+                chartSummaryInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: items.length > 0 ? items.map(i => i.val) : ['No Data'],
+                        datasets: [{
+                            label: 'Frequency',
+                            data: items.length > 0 ? items.map(i => i.count) : [0],
+                            backgroundColor: '#00d4ff',
+                            borderRadius: 4
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: { ticks: { color: '#94a3b8', precision: 0 }, grid: { color: '#2a2e45' }, min: 0 },
+                            y: { ticks: { color: '#94a3b8' }, grid: { color: '#2a2e45' } }
+                        }
+                    }
+                });
+            }
+
+            const tbody = document.getElementById('summary-table-body');
+            tbody.innerHTML = '';
+            if (items.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">No matching data</td></tr>`;
+            } else {
+                items.forEach((item, idx) => {
+                    const pct = totalSum > 0 ? ((item.count / totalSum) * 100).toFixed(1) + '%' : '0%';
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${idx + 1}</td>
+                            <td><strong>${item.val}</strong></td>
+                            <td>${item.count}</td>
+                            <td>${pct}</td>
+                        </tr>
+                    `;
+                });
+            }
+        }
+
+        function initPage3Filters() {
+            const channels = new Set();
+            const concerns = new Set();
+            const howtos = new Set();
+            const techs = new Set();
+
+            rawData.forEach(r => {
+                if (r.channel) channels.add(r.channel);
+                if (r.main_concern) concerns.add(r.main_concern);
+                if (r.how_to) howtos.add(r.how_to);
+                if (r.technical) techs.add(r.technical);
+            });
+
+            const populateSelect = (id, setObj) => {
+                const sel = document.getElementById(id);
+                if (!sel) return;
+                setObj.forEach(val => {
+                    sel.innerHTML += `<option value="${val}">${val}</option>`;
+                });
+            };
+
+            populateSelect('p3-channel', channels);
+            populateSelect('p3-concern', concerns);
+            populateSelect('p3-howto', howtos);
+            populateSelect('p3-tech', techs);
+        }
+
+        function renderPage3() {
+            const groupVal = document.getElementById('p3-group').value;
+            const chanVal = document.getElementById('p3-channel').value;
+            const concernVal = document.getElementById('p3-concern').value;
+            const howtoVal = document.getElementById('p3-howto').value;
+            const techVal = document.getElementById('p3-tech').value;
+            const searchVal = document.getElementById('p3-search').value.toLowerCase();
+
+            let filtered = rawData.filter(r => r.main_concern || r.account_sub || r.how_to || r.technical);
+
+            if (groupVal !== 'all') {
+                filtered = filtered.filter(r => getChannelGroup(r.channel) === groupVal);
+            }
+            if (chanVal !== 'all') {
+                filtered = filtered.filter(r => r.channel === chanVal);
+            }
+            if (concernVal !== 'all') {
+                filtered = filtered.filter(r => r.main_concern === concernVal);
+            }
+            if (howtoVal !== 'all') {
+                filtered = filtered.filter(r => r.how_to === howtoVal);
+            }
+            if (techVal !== 'all') {
+                filtered = filtered.filter(r => r.technical === techVal);
+            }
+            if (searchVal) {
+                filtered = filtered.filter(r => 
+                    (r.question && r.question.toLowerCase().includes(searchVal)) ||
+                    (r.recommendation && r.recommendation.toLowerCase().includes(searchVal)) ||
+                    (r.channel && r.channel.toLowerCase().includes(searchVal))
+                );
+            }
+
+            document.getElementById('p3-count-badge').innerText = `Showing ${filtered.length} entries`;
+
+            const tbody = document.getElementById('p3-table-body');
+            tbody.innerHTML = '';
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--text-muted);">No matching tickets found</td></tr>`;
+            } else {
+                filtered.forEach((r, idx) => {
+                    const group = getChannelGroup(r.channel);
+                    const badgeHtml = getGroupBadgeHtml(group);
+                    
+                    const qHtml = r.question ? `
+                        <div class="expandable" data-toggle="expand">
+                            <div class="expandable-content">${r.question}</div>
+                            <span class="expand-hint">click to toggle</span>
+                        </div>
+                    ` : '-';
+
+                    const rHtml = r.recommendation ? `
+                        <div class="expandable" data-toggle="expand">
+                            <div class="expandable-content">${r.recommendation}</div>
+                            <span class="expand-hint">click to toggle</span>
+                        </div>
+                    ` : '-';
+
+                    const linkHtml = r.thread_link ? `<a class="thread-link" href="${r.thread_link}" target="_blank">${r.channel || 'Link'}</a>` : (r.channel || '-');
+
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${idx + 1}</td>
+                            <td>
+                                ${badgeHtml}<br>
+                                <div style="margin-top:4px;">${linkHtml}</div>
+                            </td>
+                            <td><strong>${r.main_concern || '-'}</strong></td>
+                            <td>${r.account_sub || '-'}</td>
+                            <td>${r.how_to || '-'}</td>
+                            <td>${r.technical || '-'}</td>
+                            <td style="max-width:280px;">${qHtml}</td>
+                            <td style="max-width:320px;">${rHtml}</td>
+                        </tr>
+                    `;
+                });
+            }
+        }
+
+        // Attach event listeners after DOM elements load
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const target = this.getAttribute('data-target');
+                    switchPage(target);
+                });
+            });
+
+            document.querySelectorAll('.sub-tab-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.sub-tab-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    currentSummaryField = this.getAttribute('data-field');
+                    renderPage2();
+                });
+            });
+
+            document.getElementById('topN-select').addEventListener('change', updatePage1);
+            document.getElementById('cat-select').addEventListener('change', updatePage1);
+            document.getElementById('chartType-select').addEventListener('change', updatePage1);
+
+            document.getElementById('summary-search').addEventListener('input', renderPage2);
+
+            document.getElementById('p3-group').addEventListener('change', renderPage3);
+            document.getElementById('p3-channel').addEventListener('change', renderPage3);
+            document.getElementById('p3-concern').addEventListener('change', renderPage3);
+            document.getElementById('p3-howto').addEventListener('change', renderPage3);
+            document.getElementById('p3-tech').addEventListener('change', renderPage3);
+            document.getElementById('p3-search').addEventListener('input', renderPage3);
+
+            document.addEventListener('click', (e) => {
+                const expandable = e.target.closest('[data-toggle="expand"]');
+                if (expandable) {
+                    expandable.classList.toggle('expanded');
+                }
+            });
+
+            initPage3Filters();
+            updatePage1();
+        });
+    </script>
+</body>
+</html>
